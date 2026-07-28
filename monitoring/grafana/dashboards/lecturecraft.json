@@ -1,0 +1,183 @@
+{
+  "title": "LectureCraft — Application Dashboard",
+  "uid": "lecturecraft-main",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "tags": ["lecturecraft", "nodejs", "api"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "targets": [{
+        "expr": "rate(http_requests_total[5m])",
+        "legendFormat": "{{method}} {{route}} {{status}}",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 2,
+      "title": "HTTP Error Rate (4xx/5xx)",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+      "targets": [{
+        "expr": "rate(http_requests_total{status=~\"4..|5..\"}[5m])",
+        "legendFormat": "{{status}} {{route}}",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "fixedColor": "red", "mode": "fixed" } }
+      }
+    },
+    {
+      "id": 3,
+      "title": "HTTP P95 Latency",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+        "legendFormat": "P95 {{route}}",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Active WebSocket Connections",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 8, "w": 4, "h": 4 },
+      "targets": [{
+        "expr": "websocket_connections_active",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "fixedColor": "blue", "mode": "fixed" } }
+      }
+    },
+    {
+      "id": 5,
+      "title": "AI Generations / min",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 8, "w": 4, "h": 4 },
+      "targets": [{
+        "expr": "rate(ai_generation_total[1m]) * 60",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "fixedColor": "purple", "mode": "fixed" } }
+      }
+    },
+    {
+      "id": 6,
+      "title": "AI Generation P95 Latency",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 8, "w": 4, "h": 4 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, rate(ai_generation_duration_seconds_bucket[5m]))",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Queue Length (BullMQ)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 8, "w": 4, "h": 4 },
+      "targets": [{
+        "expr": "sum(bullmq_queue_waiting)",
+        "legendFormat": "Waiting",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "short" }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Node.js Heap Used",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 12, "w": 8, "h": 8 },
+      "targets": [{
+        "expr": "nodejs_heap_size_used_bytes",
+        "legendFormat": "Heap Used",
+        "datasource": "Prometheus"
+      }, {
+        "expr": "nodejs_heap_size_total_bytes",
+        "legendFormat": "Heap Total",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Process CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 12, "w": 8, "h": 8 },
+      "targets": [{
+        "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+        "legendFormat": "CPU %",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "percent" }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Event Loop Lag",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 12, "w": 8, "h": 8 },
+      "targets": [{
+        "expr": "nodejs_eventloop_lag_seconds",
+        "legendFormat": "Event Loop Lag",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Database Query Duration",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m]))",
+        "legendFormat": "P95",
+        "datasource": "Prometheus"
+      }, {
+        "expr": "histogram_quantile(0.50, rate(db_query_duration_seconds_bucket[5m]))",
+        "legendFormat": "P50",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Active Users (last 15m)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 20, "w": 4, "h": 4 },
+      "targets": [{
+        "expr": "active_users_total",
+        "datasource": "Prometheus"
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "fixedColor": "green", "mode": "fixed" } }
+      }
+    }
+  ]
+}

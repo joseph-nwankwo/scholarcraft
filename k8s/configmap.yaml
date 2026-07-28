@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lecturecraft-config
+  namespace: lecturecraft
+data:
+  NODE_ENV: production
+  PORT: "4000"
+  JWT_ACCESS_EXPIRES_IN: "15m"
+  JWT_REFRESH_EXPIRES_IN: "7d"
+  REDIS_PORT: "6379"
+  TRIAL_DAYS: "14"
+  BILLING_DEFAULT_PROVIDER: stripe
+  LOG_LEVEL: info
