@@ -21,7 +21,7 @@ export const ROUTES = {
 
   // Class Connect (Official tier)
   CLASS_CONNECT:        '/class-connect',
-  CLASS_DETAIL:         '/class-connect/:classCode',
+  CLASS_DETAIL:         '/class-connect/:courseId',
 
   // ThesisCraft
   THESISCRAFT:          '/thesiscraft',

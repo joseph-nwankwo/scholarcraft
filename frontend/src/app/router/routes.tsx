@@ -24,6 +24,7 @@ const StudyPlannerPage   = lazy(() => import('@/features/study-planner/pages/Stu
 const StudyToolsPage     = lazy(() => import('@/features/study-tools/pages/StudyToolsPage'))
 const PlagiarismCheckPage= lazy(() => import('@/features/plagiarism/pages/PlagiarismCheckPage'))
 const ClassConnectPage   = lazy(() => import('@/features/class-connect/pages/ClassConnectPage'))
+const ClassDetailPage    = lazy(() => import('@/features/class-connect/pages/ClassDetailPage'))
 const ThesisCraftPage    = lazy(() => import('@/features/thesiscraft/pages/ThesisCraftPage'))
 
 // ── Billing ───────────────────────────────────────────────────────────────────
@@ -61,6 +62,7 @@ export const routes: RouteObject[] = [
           { path: ROUTES.STUDY_TOOLS,     element: <StudyToolsPage /> },
           { path: ROUTES.PLAGIARISM_CHECK,element: <PlagiarismCheckPage /> },
           { path: ROUTES.CLASS_CONNECT,   element: <ClassConnectPage /> },
+          { path: ROUTES.CLASS_DETAIL,    element: <ClassDetailPage /> },
           { path: ROUTES.THESISCRAFT,     element: <ThesisCraftPage /> },
           { path: ROUTES.SETTINGS,        element: <SettingsPage /> },
           { path: ROUTES.BILLING,         element: <BillingPage /> },
