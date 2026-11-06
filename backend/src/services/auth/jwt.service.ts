@@ -3,6 +3,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { env } from '../../config/env'
 import { prisma } from '../../config/database'
 import type { AuthPayload } from '../../middleware/auth.middleware'
+import { AppError } from '../../utils/errors'
+import { PRODUCT_ID } from '../../config/product'
+import { requireCentralEntitlement } from './central-entitlement'
 
 const MS_IN_DAY = 86_400_000
 
@@ -22,9 +25,14 @@ export function signAccessToken(payload: AuthPayload): string {
   })
 }
 
-export async function createRefreshToken(userId: string): Promise<string> {
+/**
+ * `notAfter` (AS-P0-SECURITY-006A): the verified central paid-through instant.
+ * A refresh token never outlives the entitlement it was issued under.
+ */
+export async function createRefreshToken(userId: string, notAfter?: Date): Promise<string> {
   const token     = uuidv4()
-  const expiresAt = new Date(Date.now() + parseDuration(env.JWT_REFRESH_EXPIRES_IN))
+  const ttlEnd    = Date.now() + parseDuration(env.JWT_REFRESH_EXPIRES_IN)
+  const expiresAt = new Date(notAfter ? Math.min(ttlEnd, notAfter.getTime()) : ttlEnd)
   await prisma.refreshToken.create({ data: { token, userId, expiresAt } })
   return token
 }
@@ -42,6 +50,25 @@ export async function rotateRefreshToken(
     throw new Error('Invalid or expired refresh token')
   }
 
+  // AS-P0-SECURITY-006A: a refresh is a new grant of access. Re-check the
+  // account and central entitlement BEFORE issuing anything; on denial the
+  // presented token is revoked, so the session cannot be renewed again.
+  if (stored.user.status === 'SUSPENDED' || stored.user.status === 'INACTIVE') {
+    await prisma.refreshToken.delete({ where: { id: stored.id } })
+    throw AppError.forbidden('Your account is not active')
+  }
+  let paidThrough: Date
+  try {
+    paidThrough = await requireCentralEntitlement(PRODUCT_ID, stored.user.email)
+  } catch (err) {
+    // 403 = definitive denial: end the session. 503 = no decision: keep the
+    // token so the user can retry once the portal is reachable, but issue nothing.
+    if (err instanceof AppError && err.statusCode === 403) {
+      await prisma.refreshToken.delete({ where: { id: stored.id } })
+    }
+    throw err
+  }
+
   await prisma.refreshToken.delete({ where: { id: stored.id } })
 
   const payload: AuthPayload = {
@@ -53,7 +80,7 @@ export async function rotateRefreshToken(
   }
 
   const accessToken  = signAccessToken(payload)
-  const refreshToken = await createRefreshToken(stored.user.id)
+  const refreshToken = await createRefreshToken(stored.user.id, paidThrough)
 
   return { accessToken, refreshToken, payload }
 }

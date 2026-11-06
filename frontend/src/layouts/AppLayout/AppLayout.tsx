@@ -21,29 +21,33 @@ export default function AppLayout() {
   return (
     <CommandPaletteProvider>
       <SidebarProvider>
-        <div className="flex h-screen overflow-hidden bg-background">
-          {/* Desktop Sidebar */}
-          <Sidebar />
+        <div className="flex flex-col h-screen overflow-hidden bg-background">
+          {/* Full-width top nav */}
+          <TopNav />
 
-          {/* Mobile Navigation Drawer */}
-          <MobileNav />
+          {/* Below nav: sidebar + content */}
+          <div className="flex flex-1 overflow-hidden min-h-0">
+            {/* Desktop Sidebar */}
+            <Sidebar />
 
-          {/* Main column */}
-          <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-            <TopNav />
+            {/* Mobile Navigation Drawer */}
+            <MobileNav />
 
-            {/* Scrollable page area */}
-            <main
-              id="main-content"
-              className="flex-1 overflow-y-auto scrollbar-thin bg-muted/20"
-              tabIndex={-1}
-            >
-              <Suspense fallback={<PageSuspense />}>
-                <Outlet />
-              </Suspense>
-            </main>
+            {/* Main column */}
+            <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+              {/* Scrollable page area */}
+              <main
+                id="main-content"
+                className="flex-1 overflow-y-auto scrollbar-thin bg-muted/20"
+                tabIndex={-1}
+              >
+                <Suspense fallback={<PageSuspense />}>
+                  <Outlet />
+                </Suspense>
+              </main>
 
-            <Footer />
+              <Footer />
+            </div>
           </div>
         </div>
 

@@ -2,13 +2,14 @@ import type { Request, Response, NextFunction } from 'express'
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto'
 import rateLimit from 'express-rate-limit'
 import { AppError } from '../utils/errors'
+import { env } from '../config/env'
 
 // ── CSRF Token (Double-Submit Cookie pattern) ─────────────────────────────────
 // Used for state-mutating requests from browser clients.
 // SPA clients that store tokens in memory (not cookies) are naturally CSRF-safe,
 // but we add this layer for defense-in-depth.
 
-const CSRF_SECRET = process.env.COOKIE_SECRET ?? 'csrf-fallback-secret'
+const CSRF_SECRET = env.COOKIE_SECRET
 const CSRF_HEADER = 'x-csrf-token'
 const CSRF_COOKIE = 'lc_csrf'
 const CSRF_EXPIRY = 4 * 60 * 60 * 1000 // 4 hours

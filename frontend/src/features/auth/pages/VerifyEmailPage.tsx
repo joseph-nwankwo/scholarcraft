@@ -49,7 +49,7 @@ export default function VerifyEmailPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
               <Lightbulb className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-base font-bold">LectureCraft</span>
+            <span className="text-base font-bold">ScholarCraft</span>
           </Link>
         </div>
 

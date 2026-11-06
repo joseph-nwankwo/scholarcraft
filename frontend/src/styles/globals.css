@@ -112,8 +112,8 @@
     --font-family-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
 
     /* ── Backgrounds ─────────────────────────────────────────── */
-    /* Pure white page canvas — sidebar provides the contrast */
-    --background: oklch(1 0 0);
+    /* Warm cream page canvas — cards lift off it in near-white */
+    --background: oklch(0.968 0.008 85);
     /* #1F2937 — gray-800, warm dark; ~15:1 on white — WCAG AAA */
     --foreground: oklch(0.210 0.026 258);
 

@@ -27,15 +27,13 @@ async function startWorkers() {
     const renewalWorker = new Worker(
       'billing:renewal',
       async (job) => {
-        const { subscriptionService } = await import('../services/billing/subscription.service')
-        if (job.name === 'expire-trials') {
-          const count = await subscriptionService.processExpiredTrials()
-          logger.info(`[billing-worker] Expired ${count} trials`)
-          return { expired: count }
-        }
-        if (job.name === 'renew-subscription') {
-          const { institutionId } = job.data as { institutionId: string }
-          await subscriptionService.renewSubscription(institutionId)
+        // AS-P0-SECURITY-006A: commercial subscription jobs are central-only.
+        // 'expire-trials' (TRIALING → PAST_DUE) and 'renew-subscription'
+        // (period roll-forward without payment) are refused without touching
+        // any record; a schedule already stored in Redis is drained harmlessly.
+        if (job.name === 'expire-trials' || job.name === 'renew-subscription') {
+          logger.warn(`[billing-worker] '${job.name}' is disabled: billing is managed by the UAMSA Tech portal`)
+          return { skipped: true, reason: 'billing_managed_centrally' }
         }
       },
       { connection },
@@ -72,7 +70,10 @@ async function startWorkers() {
     const renewalQueue = new Queue('billing:renewal', { connection })
     const usageQueue = new Queue('billing:usage', { connection })
 
-    renewalQueue.add('expire-trials', {}, { repeat: { pattern: '0 2 * * *' } }).catch(() => null)
+    // AS-P0-SECURITY-006A: 'expire-trials' is no longer scheduled (it was
+    // registered by BOTH products against the shared craftsuite database).
+    // Remove a schedule left in Redis by an earlier release (best effort).
+    renewalQueue.removeRepeatable('expire-trials', { pattern: '0 2 * * *' }).catch(() => null)
     usageQueue.add('aggregate-usage', {}, { repeat: { pattern: '0 * * * *' } }).catch(() => null)
 
     logger.info('[billing-worker] Billing workers started')

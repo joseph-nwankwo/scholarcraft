@@ -9,6 +9,7 @@ import { couponsController } from '../controllers/billing/coupons.controller'
 import { usageController } from '../controllers/billing/usage.controller'
 import { apikeysController } from '../controllers/billing/apikeys.controller'
 import { featureFlagsController } from '../controllers/billing/feature-flags.controller'
+import { centralBillingOnly } from '../services/billing/central-billing'
 
 const router = Router()
 
@@ -31,12 +32,16 @@ router.get('/features/:feature', authenticate, featureFlagsController.checkFeatu
 // ─── Institution admin routes ──────────────────────────────────────────
 router.use(authenticate)
 
-// Subscriptions (institution admin)
+// Subscriptions — read-only history. AS-P0-SECURITY-006A: every write is
+// disabled (410 BILLING_MANAGED_CENTRALLY); the UAMSA Tech portal is the only
+// commercial authority. These previously let ANY authenticated member create
+// (with a client-chosen trialDays), upgrade, cancel or resume the institution's
+// subscription without payment.
 router.get('/subscription', subscriptionsController.myCurrent)
-router.post('/subscription', subscriptionsController.create)
-router.patch('/subscription/upgrade', subscriptionsController.upgrade)
-router.patch('/subscription/cancel', subscriptionsController.cancel)
-router.patch('/subscription/resume', subscriptionsController.resume)
+router.post('/subscription', centralBillingOnly)
+router.patch('/subscription/upgrade', centralBillingOnly)
+router.patch('/subscription/cancel', centralBillingOnly)
+router.patch('/subscription/resume', centralBillingOnly)
 
 // Invoices (institution admin)
 router.get('/invoices', invoicesController.list)
@@ -44,7 +49,7 @@ router.get('/invoices/:id', invoicesController.get)
 router.get('/invoices/:id/download', invoicesController.download)
 
 // Payments (institution admin)
-router.post('/payments/initiate', paymentsController.initiate)
+router.post('/payments/initiate', centralBillingOnly) // AS-P0-SECURITY-006A: checkout is central
 router.get('/payments/status', paymentsController.status)
 router.get('/payments', paymentsController.listMine)
 

@@ -1,15 +1,57 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { z } from 'zod'
+import multer from 'multer'
 import { authenticate } from '../middleware/auth.middleware'
 import { validate } from '../middleware/validate'
 import { aiLimiter } from '../middleware/rateLimiter'
 import { asyncHandler } from '../utils/asyncHandler'
 import { AppError } from '../utils/errors'
 import { AIProviderFactory } from '../services/ai/factory'
+import { extractDocumentText, ALLOWED_REFERENCE_MIME_TYPES } from '../utils/documentExtract'
 
 const router = Router()
-router.use(authenticate, aiLimiter)
+router.use(authenticate)
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_REFERENCE_MIME_TYPES.includes(file.mimetype)) cb(null, true)
+    else cb(new Error(`Unsupported file type: ${file.mimetype}`))
+  },
+})
+
+// ── Extract text from an uploaded document (lecture notes, PDF, Word doc, etc.) ──
+// Not behind aiLimiter — this is plain parsing, no AI call.
+router.post('/extract-text', upload.single('file'), asyncHandler(async (req: Request, res: Response) => {
+  const file = req.file
+  if (!file) throw AppError.badRequest('No file uploaded')
+
+  const text = await extractDocumentText(file.buffer, file.mimetype, file.originalname)
+  if (!text.trim()) throw AppError.badRequest('No extractable text found in this file')
+
+  res.json({ status: 'success', text })
+}))
+
+router.use(aiLimiter)
+
+// ~100k chars (~25k tokens) — comfortably covers a full lecture note or textbook
+// chapter while staying well within every supported provider's context window.
+const MAX_SOURCE_TEXT_CHARS = 100_000
+
+const ACADEMIC_LEVELS = ['diploma', 'undergraduate', 'postgraduate', 'professional', 'phd'] as const
+type AcademicLevel = (typeof ACADEMIC_LEVELS)[number]
+
+const ACADEMIC_LEVEL_GUIDE: Record<AcademicLevel, string> = {
+  diploma:       'a diploma-level student — keep vocabulary accessible and focus on foundational concepts',
+  undergraduate: 'an undergraduate student — standard university-level depth and terminology',
+  postgraduate:  "a postgraduate (Master's) student — assume strong foundational knowledge and go deeper into nuance and application",
+  professional:  'a working professional upskilling — practical, applied framing over academic theory',
+  phd:           'a PhD/doctoral researcher — rigorous, precise, and comfortable with advanced/technical terminology',
+}
+
+const academicLevelSchema = z.enum(ACADEMIC_LEVELS).optional()
 
 /** Strips markdown code fences and grabs the first {...} or [...] block, then parses it. */
 function parseJsonResponse<T>(raw: string): T {
@@ -35,22 +77,24 @@ function parseJsonResponse<T>(raw: string): T {
 // ── Flashcards ────────────────────────────────────────────────────────────────
 
 const flashcardsSchema = z.object({
-  topic:      z.string().trim().max(200).optional(),
-  sourceText: z.string().trim().max(20000).optional(),
-  count:      z.number().int().min(3).max(30).optional(),
+  topic:         z.string().trim().max(200).optional(),
+  sourceText:    z.string().trim().max(MAX_SOURCE_TEXT_CHARS).optional(),
+  count:         z.number().int().min(3).max(30).optional(),
+  academicLevel: academicLevelSchema,
 }).refine((d) => d.topic || d.sourceText, { message: 'Provide a topic or source text' })
 
 router.post('/flashcards', validate(flashcardsSchema), asyncHandler(async (req: Request, res: Response) => {
-  const { topic, sourceText, count = 10 } = req.body as { topic?: string; sourceText?: string; count?: number }
+  const { topic, sourceText, count = 10, academicLevel = 'undergraduate' } = req.body as { topic?: string; sourceText?: string; count?: number; academicLevel?: AcademicLevel }
 
   const subject = sourceText
     ? `the following notes:\n\n${sourceText}`
     : `the topic "${topic}"`
 
-  const systemPrompt = 'You are a study-aid generator. Respond with ONLY valid JSON, no markdown, no commentary.'
+  const systemPrompt = `You are a study-aid generator writing for ${ACADEMIC_LEVEL_GUIDE[academicLevel]}. Respond with ONLY valid JSON, no markdown, no commentary.`
   const prompt = `Generate exactly ${count} flashcards for ${subject}.
 Return JSON matching this exact shape: { "cards": [ { "front": string, "back": string } ] }
-Each "front" is a short question or term, each "back" is a concise answer or definition. No numbering, no extra text.`
+Each "front" is a short question or term, each "back" is a concise answer or definition. No numbering, no extra text.
+Pitch the difficulty and terminology for ${ACADEMIC_LEVEL_GUIDE[academicLevel]}.`
 
   const provider = AIProviderFactory.getDefault()
   const result = await provider.generate({ prompt, systemPrompt, temperature: 0.6 })
@@ -66,8 +110,9 @@ Each "front" is a short question or term, each "back" is a concise answer or def
 // ── Summarizer ────────────────────────────────────────────────────────────────
 
 const summarizeSchema = z.object({
-  text:   z.string().trim().min(20).max(20000),
-  length: z.enum(['short', 'medium', 'long']).optional(),
+  text:          z.string().trim().min(20).max(MAX_SOURCE_TEXT_CHARS),
+  length:        z.enum(['short', 'medium', 'long']).optional(),
+  academicLevel: academicLevelSchema,
 })
 
 const LENGTH_GUIDE: Record<string, string> = {
@@ -77,10 +122,10 @@ const LENGTH_GUIDE: Record<string, string> = {
 }
 
 router.post('/summarize', validate(summarizeSchema), asyncHandler(async (req: Request, res: Response) => {
-  const { text, length = 'medium' } = req.body as { text: string; length?: keyof typeof LENGTH_GUIDE }
+  const { text, length = 'medium', academicLevel = 'undergraduate' } = req.body as { text: string; length?: keyof typeof LENGTH_GUIDE; academicLevel?: AcademicLevel }
 
-  const systemPrompt = 'You are a study-aid summarizer for a student. Be clear, accurate, and well-organized. Respond in Markdown.'
-  const prompt = `Summarize the following notes or article ${LENGTH_GUIDE[length]}. Preserve key facts, definitions, and figures.\n\n${text}`
+  const systemPrompt = `You are a study-aid summarizer writing for ${ACADEMIC_LEVEL_GUIDE[academicLevel]}. Be clear, accurate, and well-organized. Respond in Markdown.`
+  const prompt = `Summarize the following notes or article ${LENGTH_GUIDE[length]}. Preserve key facts, definitions, and figures. Pitch the language and depth for ${ACADEMIC_LEVEL_GUIDE[academicLevel]}.\n\n${text}`
 
   const provider = AIProviderFactory.getDefault()
   const result = await provider.generate({ prompt, systemPrompt, temperature: 0.4 })
@@ -91,22 +136,24 @@ router.post('/summarize', validate(summarizeSchema), asyncHandler(async (req: Re
 // ── Quiz ──────────────────────────────────────────────────────────────────────
 
 const quizSchema = z.object({
-  topic:      z.string().trim().max(200).optional(),
-  sourceText: z.string().trim().max(20000).optional(),
-  count:      z.number().int().min(3).max(20).optional(),
+  topic:         z.string().trim().max(200).optional(),
+  sourceText:    z.string().trim().max(MAX_SOURCE_TEXT_CHARS).optional(),
+  count:         z.number().int().min(3).max(20).optional(),
+  academicLevel: academicLevelSchema,
 }).refine((d) => d.topic || d.sourceText, { message: 'Provide a topic or source text' })
 
 router.post('/quiz', validate(quizSchema), asyncHandler(async (req: Request, res: Response) => {
-  const { topic, sourceText, count = 5 } = req.body as { topic?: string; sourceText?: string; count?: number }
+  const { topic, sourceText, count = 5, academicLevel = 'undergraduate' } = req.body as { topic?: string; sourceText?: string; count?: number; academicLevel?: AcademicLevel }
 
   const subject = sourceText
     ? `the following notes:\n\n${sourceText}`
     : `the topic "${topic}"`
 
-  const systemPrompt = 'You are a study-aid quiz generator. Respond with ONLY valid JSON, no markdown, no commentary.'
+  const systemPrompt = `You are a study-aid quiz generator writing for ${ACADEMIC_LEVEL_GUIDE[academicLevel]}. Respond with ONLY valid JSON, no markdown, no commentary.`
   const prompt = `Generate exactly ${count} multiple-choice questions to test understanding of ${subject}.
 Return JSON matching this exact shape: { "questions": [ { "question": string, "options": string[4], "correctIndex": number, "explanation": string } ] }
-Each question has exactly 4 options, "correctIndex" is the 0-based index of the correct option, and "explanation" briefly explains the correct answer. No numbering, no extra text.`
+Each question has exactly 4 options, "correctIndex" is the 0-based index of the correct option, and "explanation" briefly explains the correct answer. No numbering, no extra text.
+Pitch the difficulty and terminology for ${ACADEMIC_LEVEL_GUIDE[academicLevel]}.`
 
   const provider = AIProviderFactory.getDefault()
   const result = await provider.generate({ prompt, systemPrompt, temperature: 0.6 })

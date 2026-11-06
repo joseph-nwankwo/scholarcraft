@@ -1,3 +1,12 @@
+// security.middleware.ts now imports env — set required vars before any module loads
+process.env.DATABASE_URL        = 'postgresql://test:test@localhost:5432/test'
+process.env.JWT_ACCESS_SECRET   = 'test-jwt-access-secret-min-32-chars-long!!'
+process.env.JWT_REFRESH_SECRET  = 'test-jwt-refresh-secret-min-32-chars-long!'
+process.env.CRAFT_LAUNCH_SECRET = 'test-craft-launch-secret-min-32-chars-long!'
+process.env.COOKIE_SECRET       = 'test-cookie-secret-min-32-chars-long!!!!!!!'
+process.env.CENTRAL_ENTITLEMENT_URL            = 'http://portal.test/api/internal/entitlements/verify'
+process.env.CENTRAL_ENTITLEMENT_SERVICE_SECRET = 'test-central-entitlement-service-secret-0123'
+
 import { sanitizeInput, validateFileUpload } from '../middleware/security.middleware'
 import type { Request, Response, NextFunction } from 'express'
 

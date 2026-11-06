@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 
 interface SidebarContextValue {
   collapsed: boolean
@@ -7,6 +7,7 @@ interface SidebarContextValue {
   setCollapsed: (v: boolean) => void
   openMobile: () => void
   closeMobile: () => void
+  toggleMobile: () => void
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null)
@@ -23,16 +24,19 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, String(collapsed))
   }, [collapsed])
 
-  function setCollapsed(v: boolean) {
-    setCollapsedState(v)
-  }
+  const setCollapsed = useCallback((v: boolean) => setCollapsedState(v), [])
+  const toggle = useCallback(() => setCollapsedState((c) => !c), [])
+  const openMobile = useCallback(() => setMobileOpen(true), [])
+  const closeMobile = useCallback(() => setMobileOpen(false), [])
+  const toggleMobile = useCallback(() => setMobileOpen((v) => !v), [])
 
-  function toggle() {
-    setCollapsedState((c) => !c)
-  }
+  const value = useMemo(
+    () => ({ collapsed, mobileOpen, toggle, setCollapsed, openMobile, closeMobile, toggleMobile }),
+    [collapsed, mobileOpen, toggle, setCollapsed, openMobile, closeMobile, toggleMobile]
+  )
 
   return (
-    <SidebarContext value={{ collapsed, mobileOpen, toggle, setCollapsed, openMobile: () => setMobileOpen(true), closeMobile: () => setMobileOpen(false) }}>
+    <SidebarContext value={value}>
       {children}
     </SidebarContext>
   )

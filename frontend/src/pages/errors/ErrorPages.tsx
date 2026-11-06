@@ -126,7 +126,7 @@ export function MaintenancePage() {
       icon={<Wrench className="h-12 w-12 text-primary" strokeWidth={1.5} />}
       iconBg="bg-primary/10"
       title="Under Maintenance"
-      description="LectureCraft is currently undergoing scheduled maintenance to improve your experience. We'll be back online shortly."
+      description="ScholarCraft is currently undergoing scheduled maintenance to improve your experience. We'll be back online shortly."
       actions={
         <Button variant="outline" leftIcon={<RefreshCw className="h-4 w-4" />} onClick={() => window.location.reload()}>
           Check again

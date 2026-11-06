@@ -3,6 +3,7 @@ import { prisma } from '../../config/database'
 import { AppError } from '../../utils/errors'
 import { logger } from '../../utils/logger'
 import type { BillingStatus, PlanTier } from '@prisma/client'
+import { assertProductBillingWritesDisabled } from './central-billing'
 
 const SLUG_TO_TIER: Record<string, PlanTier> = {
   free: 'FREE', starter: 'STARTER', professional: 'PROFESSIONAL', enterprise: 'ENTERPRISE',
@@ -40,6 +41,9 @@ export const subscriptionService = {
   async createSubscription(institutionId: string, planId: string, opts?: {
     couponCode?: string; trialDays?: number; autoRenew?: boolean
   }) {
+    // AS-P0-SECURITY-006A: no product-side subscriptions or trials (the
+    // automatic 14-day trial and the client-supplied trialDays are gone).
+    assertProductBillingWritesDisabled()
     const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } })
     if (!plan) throw AppError.notFound('Plan')
 
@@ -103,6 +107,8 @@ export const subscriptionService = {
   },
 
   async upgradeSubscription(institutionId: string, newPlanId: string, opts?: { prorate?: boolean }) {
+    // AS-P0-SECURITY-006A: commercial subscription writes are central-only.
+    assertProductBillingWritesDisabled()
     const sub = await prisma.institutionSubscription.findUnique({
       where: { institutionId }, include: { plan: true },
     })
@@ -144,6 +150,8 @@ export const subscriptionService = {
   },
 
   async cancelSubscription(institutionId: string, immediate = false) {
+    // AS-P0-SECURITY-006A: commercial subscription writes are central-only.
+    assertProductBillingWritesDisabled()
     const sub = await prisma.institutionSubscription.findUnique({ where: { institutionId } })
     if (!sub) throw AppError.notFound('Subscription')
     if (sub.status === 'CANCELLED') throw AppError.badRequest('Subscription is already cancelled')
@@ -161,6 +169,8 @@ export const subscriptionService = {
   },
 
   async resumeSubscription(institutionId: string) {
+    // AS-P0-SECURITY-006A: commercial subscription writes are central-only.
+    assertProductBillingWritesDisabled()
     const sub = await prisma.institutionSubscription.findUnique({
       where: { institutionId }, include: { plan: true },
     })
@@ -183,6 +193,8 @@ export const subscriptionService = {
   },
 
   async renewSubscription(institutionId: string) {
+    // AS-P0-SECURITY-006A: commercial subscription writes are central-only.
+    assertProductBillingWritesDisabled()
     const sub = await prisma.institutionSubscription.findUnique({
       where: { institutionId }, include: { plan: true },
     })
@@ -253,6 +265,8 @@ export const subscriptionService = {
 
   // Called by BullMQ worker or cron to expire trials & process renewals
   async processExpiredTrials() {
+    // AS-P0-SECURITY-006A: historical trial records are left untouched.
+    assertProductBillingWritesDisabled()
     const now = new Date()
     const expired = await prisma.institutionSubscription.findMany({
       where: { status: 'TRIALING', trialEndsAt: { lte: now } },

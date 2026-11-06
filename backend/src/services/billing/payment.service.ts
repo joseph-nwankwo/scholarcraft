@@ -4,6 +4,7 @@ import { getPaymentProvider } from './providers'
 import { invoiceService } from './invoice.service'
 import type { CheckoutOptions } from './providers/types'
 import type { PaymentProviderType } from '@prisma/client'
+import { assertProductBillingWritesDisabled } from './central-billing'
 
 export const paymentService = {
   async initiatePayment(opts: {
@@ -13,6 +14,8 @@ export const paymentService = {
     successUrl: string
     cancelUrl: string
   }) {
+    // AS-P0-SECURITY-006A: checkout is central-only.
+    assertProductBillingWritesDisabled()
     const invoice = await prisma.invoice.findUnique({
       where: { id: opts.invoiceId },
       include: { institution: true },
@@ -68,16 +71,10 @@ export const paymentService = {
     })
 
     if (event.status === 'succeeded' && invoice.status !== 'PAID') {
+      // Payment/invoice HISTORY is still recorded for legacy deliveries.
       await invoiceService.markPaid(invoiceId, payment.id)
-
-      const sub = await prisma.institutionSubscription.findFirst({
-        where: { institutionId: invoice.institutionId },
-      })
-      if (sub && sub.status === 'PAST_DUE') {
-        await prisma.institutionSubscription.update({
-          where: { id: sub.id }, data: { status: 'ACTIVE' },
-        })
-      }
+      // AS-P0-SECURITY-006A: a product webhook no longer changes subscription
+      // status (it used to flip PAST_DUE → ACTIVE). Entitlement is central.
     }
 
     return { payment, event }

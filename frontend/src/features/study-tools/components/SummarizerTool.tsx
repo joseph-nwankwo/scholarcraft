@@ -9,10 +9,16 @@ import { Alert } from '@/components/design-system/feedback/Alert'
 import { EmptyState } from '@/components/design-system/cards/EmptyState'
 import { cn } from '@/lib/utils'
 import { studyToolsApi } from '@/lib/api/studyTools.api'
+import { UploadDocumentButton } from './UploadDocumentButton'
+import type { AcademicLevel } from '../pages/StudyToolsPage'
 
 type Length = 'short' | 'medium' | 'long'
 
-export function SummarizerTool() {
+interface Props {
+  academicLevel: AcademicLevel
+}
+
+export function SummarizerTool({ academicLevel }: Props) {
   const [text, setText]       = useState('')
   const [length, setLength]   = useState<Length>('medium')
   const [loading, setLoading] = useState(false)
@@ -25,7 +31,7 @@ export function SummarizerTool() {
     setError('')
     setLoading(true)
     try {
-      const result = await studyToolsApi.summarize({ text: text.trim(), length })
+      const result = await studyToolsApi.summarize({ text: text.trim(), length, academicLevel })
       setSummary(result)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -45,11 +51,12 @@ export function SummarizerTool() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <form onSubmit={handleSummarize} className="space-y-4">
         {error && <Alert variant="warning" description={error} />}
+        <UploadDocumentButton onExtracted={setText} />
         <TextareaField
           label="Paste your notes or article"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Paste lecture notes, an article, or any text you want summarized…"
+          placeholder="Paste lecture notes, an article, or any text you want summarized… or upload a document above"
           rows={14}
           required
         />

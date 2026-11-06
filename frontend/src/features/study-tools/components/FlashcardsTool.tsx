@@ -7,10 +7,16 @@ import { Alert } from '@/components/design-system/feedback/Alert'
 import { EmptyState } from '@/components/design-system/cards/EmptyState'
 import { cn } from '@/lib/utils'
 import { studyToolsApi, type Flashcard } from '@/lib/api/studyTools.api'
+import { UploadDocumentButton } from './UploadDocumentButton'
+import type { AcademicLevel } from '../pages/StudyToolsPage'
 
 type Mode = 'topic' | 'notes'
 
-export function FlashcardsTool() {
+interface Props {
+  academicLevel: AcademicLevel
+}
+
+export function FlashcardsTool({ academicLevel }: Props) {
   const [mode, setMode]         = useState<Mode>('topic')
   const [topic, setTopic]       = useState('')
   const [notes, setNotes]       = useState('')
@@ -30,6 +36,7 @@ export function FlashcardsTool() {
         topic: mode === 'topic' ? topic.trim() : undefined,
         sourceText: mode === 'notes' ? notes.trim() : undefined,
         count,
+        academicLevel,
       })
       setCards(result)
       setIndex(0)
@@ -139,14 +146,17 @@ export function FlashcardsTool() {
           required
         />
       ) : (
-        <TextareaField
-          label="Paste your notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Paste lecture notes, textbook excerpts, or any study material…"
-          rows={8}
-          required
-        />
+        <div className="space-y-3">
+          <UploadDocumentButton onExtracted={setNotes} />
+          <TextareaField
+            label="Paste your notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Paste lecture notes, textbook excerpts, or any study material… or upload a document above"
+            rows={8}
+            required
+          />
+        </div>
       )}
 
       <TextField

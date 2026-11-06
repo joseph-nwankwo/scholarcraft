@@ -66,23 +66,6 @@ const NAV: NavSection[] = [
   },
 ]
 
-// ── Brand mark ────────────────────────────────────────────────────────────────
-function BrandMark({ collapsed }: { collapsed: boolean }) {
-  return (
-    <div className={cn('flex items-center gap-2.5 px-4 py-4 border-b border-border', collapsed && 'justify-center px-2')}>
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm select-none">
-        SC
-      </div>
-      {!collapsed && (
-        <div className="min-w-0">
-          <p className="font-bold text-sm text-foreground leading-none">ScholarCraft</p>
-          <p className="text-[10px] text-muted-foreground">by UAMSATech</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ── Nav item ──────────────────────────────────────────────────────────────────
 function NavItemRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const content = (
@@ -135,8 +118,6 @@ export default function Sidebar() {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      <BrandMark collapsed={collapsed} />
-
       <ScrollArea className="flex-1 py-3 px-2">
         {NAV.map((section) => (
           <div key={section.id} className="mb-4">

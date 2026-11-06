@@ -8,10 +8,16 @@ import { EmptyState } from '@/components/design-system/cards/EmptyState'
 import { ProgressBar } from '@/components/design-system/feedback/ProgressBar'
 import { cn } from '@/lib/utils'
 import { studyToolsApi, type QuizQuestion } from '@/lib/api/studyTools.api'
+import { UploadDocumentButton } from './UploadDocumentButton'
+import type { AcademicLevel } from '../pages/StudyToolsPage'
 
 type Mode = 'topic' | 'notes'
 
-export function QuizTool() {
+interface Props {
+  academicLevel: AcademicLevel
+}
+
+export function QuizTool({ academicLevel }: Props) {
   const [mode, setMode]         = useState<Mode>('topic')
   const [topic, setTopic]       = useState('')
   const [notes, setNotes]       = useState('')
@@ -32,6 +38,7 @@ export function QuizTool() {
         topic: mode === 'topic' ? topic.trim() : undefined,
         sourceText: mode === 'notes' ? notes.trim() : undefined,
         count,
+        academicLevel,
       })
       setQuestions(result)
       setIndex(0)
@@ -165,14 +172,17 @@ export function QuizTool() {
           required
         />
       ) : (
-        <TextareaField
-          label="Paste your notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Paste lecture notes, textbook excerpts, or any study material…"
-          rows={8}
-          required
-        />
+        <div className="space-y-3">
+          <UploadDocumentButton onExtracted={setNotes} />
+          <TextareaField
+            label="Paste your notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Paste lecture notes, textbook excerpts, or any study material… or upload a document above"
+            rows={8}
+            required
+          />
+        </div>
       )}
 
       <TextField

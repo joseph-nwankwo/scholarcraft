@@ -286,19 +286,9 @@ export function ThesisAssistantTab({ thesisState }: Props) {
     },
   })
 
-  useEffect(() => {
-    if (editor && !(editor as unknown as { __debugId?: number }).__debugId) {
-      ;(editor as unknown as { __debugId?: number }).__debugId = Math.floor(Math.random() * 100000)
-      // eslint-disable-next-line no-console
-      console.log(`[editor-instance] new editor created id=${(editor as unknown as { __debugId?: number }).__debugId} time=${Date.now()}`)
-    }
-  }, [editor])
-
   // Sync editor content when a different thesis loads.
   useEffect(() => {
     if (!editor) return
-    // eslint-disable-next-line no-console
-    console.log(`[sync-effect] firing editorId=${(editor as unknown as { __debugId?: number }).__debugId ?? 'n/a'} time=${Date.now()}`)
     const html = thesis?.assistantDocument ?? ''
     editor.commands.setContent(html, { emitUpdate: false })
     setDraft(html)

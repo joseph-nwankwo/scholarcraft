@@ -12,7 +12,8 @@ function ssoOnly(_req: Request, res: Response, next: NextFunction) {
   if (env.DISABLE_DIRECT_SIGNUP) {
     res.status(403).json({
       status: 'error',
-      message: 'Direct registration is disabled. Please sign up via uamsatech.com.',
+      code:    'DIRECT_SIGNUP_DISABLED',
+      message: 'Registration is managed through the UAMSA Tech portal. Please sign up at uamsatech.com.',
     })
     return
   }

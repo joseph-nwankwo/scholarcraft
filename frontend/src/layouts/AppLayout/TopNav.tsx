@@ -1,8 +1,7 @@
-import { Link, useLocation } from 'react-router-dom'
 import {
   Bell, Plus, ChevronDown, Menu, User, Settings, LogOut,
-  CreditCard, Key, Monitor, Moon, Sun, HelpCircle, ExternalLink,
-  Sparkles, ChevronRight,
+  CreditCard, Monitor, Moon, Sun, HelpCircle, ExternalLink,
+  Sparkles, BookOpen, ShieldCheck, GraduationCap, Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ROUTES } from '@/constants/routes'
@@ -16,27 +15,10 @@ import {
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/design-system/buttons/Button'
 import { useNavigate } from 'react-router-dom'
 
-const routeLabels: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/courses': 'Courses',
-  '/lecture-notes': 'Lecture Notes',
-  '/teaching-assistant': 'Teaching Assistant',
-  '/ai-studio': 'AI Studio',
-  '/question-generator': 'Question Generator',
-  '/assignment-generator': 'Assignment Generator',
-  '/exam-builder': 'Exam Builder',
-  '/rubric-generator': 'Rubric Generator',
-  '/course-outline': 'Course Outline',
-  '/powerpoint-generator': 'Presentation AI',
-  '/research-assistant': 'Research Assistant',
-  '/document-library': 'Document Library',
-  '/exports': 'Exports',
-  '/analytics': 'Analytics',
-  '/settings': 'Settings',
-}
+const NAVY = '#0B1E3D'
+const GOLD = '#C9A227'
 
 function useGreeting() {
   const h = new Date().getHours()
@@ -45,46 +27,10 @@ function useGreeting() {
   return 'Good evening'
 }
 
-function Breadcrumbs() {
-  const location = useLocation()
-  const segments = location.pathname.split('/').filter(Boolean)
-
-  const crumbs = segments.reduce<{ label: string; href: string }[]>((acc, seg, i) => {
-    const href = '/' + segments.slice(0, i + 1).join('/')
-    const label = routeLabels[href] ?? seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' ')
-    acc.push({ label, href })
-    return acc
-  }, [])
-
-  if (crumbs.length <= 1) {
-    return <span className="text-sm font-semibold text-foreground">{crumbs[0]?.label ?? 'Dashboard'}</span>
-  }
-
-  return (
-    <nav aria-label="Breadcrumb">
-      <ol className="flex items-center gap-1 text-sm">
-        {crumbs.map((crumb, i) => {
-          const isLast = i === crumbs.length - 1
-          return (
-            <li key={crumb.href} className="flex items-center gap-1">
-              {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" aria-hidden />}
-              {isLast ? (
-                <span className="font-semibold text-foreground" aria-current="page">{crumb.label}</span>
-              ) : (
-                <Link to={crumb.href} className="text-muted-foreground hover:text-foreground transition-colors">{crumb.label}</Link>
-              )}
-            </li>
-          )
-        })}
-      </ol>
-    </nav>
-  )
-}
-
 export function TopNav() {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
-  const { openMobile } = useSidebar()
+  const { toggleMobile } = useSidebar()
   const { setOpen: openPalette } = useCommandPalette()
   const navigate = useNavigate()
   const greeting = useGreeting()
@@ -93,7 +39,7 @@ export function TopNav() {
   const isOnline = navigator.onLine
 
   const initials = user
-    ? ((user as unknown as { name?: string }).name ?? user.email ?? '')
+    ? (user.name ?? user.email ?? '')
         .split(' ')
         .map((w: string) => w[0])
         .join('')
@@ -101,87 +47,123 @@ export function TopNav() {
         .slice(0, 2)
     : 'U'
 
-  const today = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date())
+  const iconBtn: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: 32, height: 32, borderRadius: 7, background: 'transparent',
+    border: '1px solid rgba(255,255,255,0.18)', cursor: 'pointer', color: '#fff',
+    flexShrink: 0, transition: 'background 0.15s',
+  }
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 backdrop-blur-sm px-4 z-20">
-      {/* Left: hamburger + breadcrumb */}
-      <div className="flex items-center gap-3 min-w-0">
-        {/* Mobile hamburger */}
+    <header style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      height: 56, flexShrink: 0, padding: '0 20px',
+      background: NAVY, borderBottom: `3px solid ${GOLD}`,
+      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+      position: 'sticky', top: 0, zIndex: 40,
+    }}>
+
+      {/* Left: mobile hamburger + brand */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        {/* Hamburger — only visible on mobile when sidebar is hidden */}
         <button
           type="button"
-          onClick={openMobile}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden"
-          aria-label="Open navigation"
+          onClick={toggleMobile}
+          className="flex md:hidden"
+          style={{ ...iconBtn, border: 'none', display: undefined }}
+          aria-label="Toggle navigation"
         >
-          <Menu className="h-4.5 w-4.5" />
+          <Menu size={18} />
         </button>
 
-        <Breadcrumbs />
+        {/* Brand */}
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+          <span style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: -0.3, whiteSpace: 'nowrap' }}>
+            Scholar<span style={{ color: GOLD }}>Craft</span>
+          </span>
+          <span className="hidden sm:block" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: GOLD, letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: 2 }}>
+            UAMSATECH · CRAFT SUITE
+          </span>
+        </div>
       </div>
 
       {/* Right: actions */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        {/* Date */}
-        <span className="hidden xl:block text-xs text-muted-foreground mr-1 tabular-nums">{today}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
 
-        {/* Global search trigger */}
+        {/* Command palette search — desktop */}
         <button
           type="button"
           onClick={() => openPalette(true)}
-          className="hidden sm:flex h-8 items-center gap-2 rounded-lg border border-input bg-muted/50 px-3 text-xs text-muted-foreground hover:bg-muted transition-colors"
+          className="hidden md:flex"
+          style={{
+            height: 32, alignItems: 'center', gap: 8, borderRadius: 7,
+            border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)',
+            padding: '0 12px', cursor: 'pointer', color: 'rgba(255,255,255,0.55)',
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: 11,
+          }}
           aria-label="Open command palette"
         >
-          <span className="hidden md:block">Search anything…</span>
-          <kbd className="pointer-events-none rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
+          Search anything…
+          <kbd style={{ borderRadius: 4, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(0,0,0,0.2)', padding: '0 5px', fontFamily: 'inherit', fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+            ⌘K
+          </kbd>
         </button>
 
-        {/* AI Quick Action */}
-        <Button
-          variant="primary"
-          size="sm"
-          leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-          onClick={() => navigate(ROUTES.AI_STUDIO)}
+        {/* AI Generate */}
+        <button
+          type="button"
+          onClick={() => navigate(ROUTES.STUDY_TOOLS)}
           className="hidden sm:flex"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, height: 32,
+            padding: '0 14px', borderRadius: 7, border: 'none',
+            background: '#0B1E3D', cursor: 'pointer',
+            fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12,
+            color: '#fff', fontWeight: 600,
+          }}
         >
+          <Sparkles size={13} />
           <span className="hidden md:block">Generate</span>
-        </Button>
+        </button>
 
         {/* Quick Create */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-input bg-background text-muted-foreground hover:bg-muted transition-colors"
-              aria-label="Quick create"
-            >
-              <Plus className="h-4 w-4" />
+            <button type="button" style={iconBtn} aria-label="Quick create">
+              <Plus size={16} />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>Create New</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate(ROUTES.COURSES + '/new')}>New Course</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate(ROUTES.LECTURE_NOTES + '/generate')}>Generate Lecture Note</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate(ROUTES.QUESTION_GENERATOR)}>Generate Questions</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate(ROUTES.ASSIGNMENT_GENERATOR)}>Create Assignment</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate(ROUTES.EXAM_BUILDER)}>Build Exam</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate(ROUTES.AI_STUDIO)}>AI Studio</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate(ROUTES.STUDY_TOOLS)}>
+              <BookOpen className="mr-2 h-4 w-4" />Study Tools
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate(ROUTES.PLAGIARISM_CHECK)}>
+              <ShieldCheck className="mr-2 h-4 w-4" />Plagiarism & AI Check
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate(ROUTES.THESISCRAFT)}>
+              <GraduationCap className="mr-2 h-4 w-4" />ThesisCraft
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate(ROUTES.CLASS_CONNECT)}>
+              <Users className="mr-2 h-4 w-4" />Class Connect
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="relative flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors"
-              aria-label={`${unreadCount} unread notifications`}
-            >
-              <Bell className="h-4 w-4" />
+            <button type="button" style={{ ...iconBtn, position: 'relative' }} aria-label={`${unreadCount} notifications`}>
+              <Bell size={16} />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                <span style={{
+                  position: 'absolute', top: -3, right: -3,
+                  width: 16, height: 16, borderRadius: '50%',
+                  background: GOLD, color: NAVY,
+                  fontSize: 9, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -194,12 +176,12 @@ export function TopNav() {
             </div>
             <div className="divide-y max-h-72 overflow-y-auto">
               {[
-                { id: '1', title: 'AI Generation Complete', desc: 'Your lecture note for CS 101 is ready.', time: '2m ago', unread: true },
-                { id: '2', title: 'Export Finished', desc: 'Assignment PDF downloaded successfully.', time: '15m ago', unread: true },
-                { id: '3', title: 'New Course Created', desc: 'Introduction to Data Science added.', time: '1h ago', unread: true },
+                { id: '1', title: 'Plagiarism Check Complete', desc: 'Your thesis draft scored 96% original.', time: '2m ago', unread: true },
+                { id: '2', title: 'Class Invitation', desc: 'You were added to CS 301 — Data Structures.', time: '15m ago', unread: true },
+                { id: '3', title: 'Study Reminder', desc: 'Your flashcard deck "Organic Chemistry" is due for review.', time: '1h ago', unread: true },
               ].map((n) => (
-                <div key={n.id} className={cn('flex gap-3 px-4 py-3 hover:bg-muted/40 cursor-pointer', n.unread && 'bg-primary/3')}>
-                  <div className={cn('mt-0.5 h-2 w-2 shrink-0 rounded-full', n.unread ? 'bg-primary' : 'bg-transparent')} />
+                <div key={n.id} className={cn('flex gap-3 px-4 py-3 hover:bg-muted/40 cursor-pointer', n.unread && 'bg-primary/5')}>
+                  <div className={cn('mt-1 h-2 w-2 shrink-0 rounded-full', n.unread ? 'bg-primary' : 'bg-transparent')} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{n.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{n.desc}</p>
@@ -217,24 +199,24 @@ export function TopNav() {
         </DropdownMenu>
 
         {/* Online indicator */}
-        <span className="hidden lg:flex items-center gap-1 text-[10px] text-muted-foreground">
-          <span className={cn('h-1.5 w-1.5 rounded-full', isOnline ? 'bg-success' : 'bg-error')} />
+        <span className="hidden lg:flex items-center gap-1" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOnline ? '#22c55e' : '#ef4444' }} />
           {isOnline ? 'Online' : 'Offline'}
         </span>
 
-        {/* Profile */}
+        {/* Profile dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-1.5 rounded-lg p-1 hover:bg-muted transition-colors"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 7, padding: '3px 6px 3px 3px', background: 'transparent', border: 'none', cursor: 'pointer' }}
               aria-label="User menu"
             >
               <Avatar className="h-7 w-7">
                 <AvatarImage src={user?.avatarUrl ?? undefined} />
-                <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
+                <AvatarFallback style={{ fontSize: 11, background: `${GOLD}25`, color: GOLD, fontWeight: 700 }}>{initials}</AvatarFallback>
               </Avatar>
-              <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
+              <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.5)' }} className="hidden sm:block" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
@@ -245,17 +227,14 @@ export function TopNav() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate(ROUTES.SETTINGS)}>
+            <DropdownMenuItem onClick={() => navigate(ROUTES.SETTINGS_PROFILE)}>
               <User className="mr-2 h-4 w-4" />Profile
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate(ROUTES.SETTINGS)}>
               <Settings className="mr-2 h-4 w-4" />Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate(ROUTES.SETTINGS)}>
+            <DropdownMenuItem onClick={() => navigate(ROUTES.BILLING)}>
               <CreditCard className="mr-2 h-4 w-4" />Billing
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate(ROUTES.SETTINGS)}>
-              <Key className="mr-2 h-4 w-4" />API Keys
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuSub>

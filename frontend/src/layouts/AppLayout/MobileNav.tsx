@@ -58,20 +58,12 @@ export default function MobileNav() {
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/50 md:hidden"
+        className="fixed inset-x-0 top-14 bottom-0 z-40 bg-black/50 md:hidden"
         onClick={closeMobile}
       />
-      <div className="fixed inset-y-0 left-0 z-50 w-72 bg-card border-r border-border flex flex-col md:hidden">
+      <div className="fixed left-0 top-14 bottom-0 z-40 w-72 bg-card border-r border-border flex flex-col md:hidden">
         <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-              SC
-            </div>
-            <div>
-              <p className="font-bold text-sm text-foreground leading-none">ScholarCraft</p>
-              <p className="text-[10px] text-muted-foreground">by UAMSATech</p>
-            </div>
-          </div>
+          <p className="font-semibold text-sm text-foreground">Menu</p>
           <button
             onClick={closeMobile}
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"

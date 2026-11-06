@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '../../config/database'
 import { AppError } from '../../utils/errors'
 import { signAccessToken, createRefreshToken } from './jwt.service'
+import { requireCentralEntitlement } from './central-entitlement'
+import { PRODUCT_ID } from '../../config/product'
 import { roleService } from '../role/role.service'
 import { emailService } from '../email/email.service'
 import { auditService } from '../audit/audit.service'
@@ -15,7 +17,7 @@ const LOCKOUT_MS     = 15 * 60 * 1000       // 15 min
 const RESET_TTL_MS   = 60 * 60 * 1000       // 1 hr
 const VERIFY_TTL_MS  = 24 * 60 * 60 * 1000  // 24 hr
 
-const PRODUCT              = 'scholarcraft' as const
+const PRODUCT              = 'scholarsuite' as const
 const PRODUCT_DEFAULT_ROLE = 'STUDENT'      as const
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -115,6 +117,11 @@ export const authService = {
     const existing = await prisma.user.findUnique({ where: { email: input.email.toLowerCase() } })
     if (existing) throw AppError.conflict('An account with this email already exists')
 
+    // AS-P0-SECURITY-006A: registration (only reachable when DISABLE_DIRECT_SIGNUP
+    // is explicitly 'false') issues a session, so it needs central entitlement
+    // first — and no account is created without it.
+    const paidThrough = await requireCentralEntitlement(PRODUCT_ID, input.email.toLowerCase())
+
     const role   = input.role ?? 'STUDENT'
     const hashed = await bcrypt.hash(input.password, SALT_ROUNDS)
     const user   = await prisma.user.create({
@@ -134,7 +141,7 @@ export const authService = {
 
     const roleSlug    = role.toLowerCase()
     const accessToken  = signAccessToken({ userId: user.id, email: user.email, role: user.role, institutionId: user.institutionId, roleSlug })
-    const refreshToken = await createRefreshToken(user.id)
+    const refreshToken = await createRefreshToken(user.id, paidThrough)
 
     return { user: sanitizeUser(user, roleSlug), tokens: { accessToken, refreshToken } }
   },
@@ -167,6 +174,10 @@ export const authService = {
     if (user.status === 'SUSPENDED') throw AppError.forbidden('Your account has been suspended')
     if (user.status === 'INACTIVE')  throw AppError.forbidden('Your account is inactive')
 
+    // AS-P0-SECURITY-006A: a product account is not commercial entitlement.
+    // Ask the central portal before issuing any session (fails closed).
+    const paidThrough = await requireCentralEntitlement(PRODUCT_ID, user.email)
+
     // Reset failed attempts + update lastLogin
     await prisma.user.update({
       where: { id: user.id },
@@ -186,7 +197,7 @@ export const authService = {
         : 'lecturer'
 
     const accessToken  = signAccessToken({ userId: user.id, email: user.email, role, institutionId: user.institutionId, roleSlug })
-    const refreshToken = await createRefreshToken(user.id)
+    const refreshToken = await createRefreshToken(user.id, paidThrough)
 
     // Create session
     const sessionToken = uuidv4()

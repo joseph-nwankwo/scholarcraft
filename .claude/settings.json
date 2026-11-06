@@ -133,11 +133,35 @@
       "PowerShell(Get-NetTCPConnection -LocalPort 4001 -State Listen -ErrorAction SilentlyContinue)",
       "PowerShell(Get-Process -Id 116724,15212)",
       "PowerShell(Stop-Process -Id 15212,116724 -Force -Confirm:$false)",
-      "PowerShell(Get-NetTCPConnection -LocalPort 3002,4001 -State Listen -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-NetTCPConnection -LocalPort 3002,4001 -State Listen -ErrorAction SilentlyContinue)",
+      "Bash(grep -rn 'AI_STUDIO\\\\|COURSES:\\\\|LECTURE_NOTES' 'c:\\\\Users\\\\MY PC\\\\Desktop\\\\Apps\\\\ScholarCraft\\\\frontend\\\\src\\\\constants\" 2>/dev/null *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node __navbar_check.mjs)",
+      "Bash(node __layout_check.mjs)",
+      "Bash(rm -f \"c:\\\\Users\\\\MY PC\\\\Desktop\\\\Apps\\\\ScholarCraft\\\\frontend\\\\__drawer_check.mjs\")",
+      "Bash(node __drawer_check.mjs)",
+      "Bash(rm -f __layout_check.mjs __drawer_check.mjs)",
+      "Bash(node __breakpoint_check.mjs)",
+      "Bash(rm -f __breakpoint_check.mjs)",
+      "Bash(node __toggle_check.mjs)",
+      "Bash(rm -f __toggle_check.mjs)",
+      "Bash(node __bg_check.mjs)",
+      "Bash(rm -f __bg_check.mjs)",
+      "Bash(node __studytools_check.mjs)",
+      "Bash(rm -f __studytools_check.mjs)",
+      "Bash(node __upload_check.mjs)",
+      "Bash(rm -f __upload_check.mjs)",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e \"console.log\\('Cellular respiration is the process by which cells break down glucose to release energy in the form of ATP. It occurs in three main stages: glycolysis, the Krebs cycle, and oxidative phosphorylation. '.repeat\\(140\\).length\\)\")",
+      "Bash(node -e \" *)",
+      "Bash(rm -f \"C:\\\\Users\\\\MY PC\\\\Desktop\\\\Apps\\\\ScholarCraft\\\\frontend\\\\__longtext.json\" *)",
+      "Bash(timeout 30 bash -c 'until netstat -ano | grep -q \":4001.*LISTENING\"; do sleep 1; done')"
     ],
     "additionalDirectories": [
       "C:\\Users\\MYPC~1\\AppData\\Local\\Temp\\claude\\c--Users-MY-PC-Desktop-Apps-ScholarCraft\\a117c17f-97b0-4583-b372-3b0b3de98de9\\scratchpad\\pw",
-      "C:\\Users\\MYPC~1\\AppData\\Local\\Temp\\claude\\c--Users-MY-PC-Desktop-Apps-ScholarCraft\\a117c17f-97b0-4583-b372-3b0b3de98de9\\scratchpad"
+      "C:\\Users\\MYPC~1\\AppData\\Local\\Temp\\claude\\c--Users-MY-PC-Desktop-Apps-ScholarCraft\\a117c17f-97b0-4583-b372-3b0b3de98de9\\scratchpad",
+      "c:\\Users\\MY PC\\Desktop\\Apps\\ScholarCraft\\frontend",
+      "C:\\Users\\MY PC\\Desktop\\Apps\\ScholarCraft\\frontend"
     ]
   }
 }
