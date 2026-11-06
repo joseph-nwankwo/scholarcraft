@@ -159,8 +159,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_URL: https://api.lecturecraft.app/api
-          VITE_APP_NAME: LectureCraft
+          VITE_API_URL: https://api.scholarsuite.uamsatech.com/api
+          VITE_APP_NAME: ScholarSuite
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

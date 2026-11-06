@@ -56,7 +56,8 @@ COPY prisma ./prisma
 # Package manifest (needed for some runtime introspection)
 COPY package.json ./
 
-RUN chown -R appuser:appgroup /app
+COPY scripts/start.sh ./scripts/start.sh
+RUN chmod +x ./scripts/start.sh && chown -R appuser:appgroup /app
 USER appuser
 
 EXPOSE 4000
@@ -64,4 +65,4 @@ EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget -qO- http://localhost:4000/health || exit 1
 
-CMD ["node", "dist/app.js"]
+CMD ["sh", "scripts/start.sh"]
