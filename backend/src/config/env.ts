@@ -48,11 +48,13 @@ const baseEnvSchema = z.object({
   // Redis
   REDIS_URL: z.string().default('redis://localhost:6379'),
 
-  // AWS S3
-  AWS_REGION:            z.string().default('us-east-1'),
+  // AWS S3 / Cloudflare R2
+  AWS_REGION:            z.string().default('auto'),
   AWS_ACCESS_KEY_ID:     z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_S3_BUCKET:         z.string().optional(),
+  AWS_S3_ENDPOINT:       z.string().url().optional(),
+  AWS_S3_PUBLIC_URL:     z.string().url().optional(),
 
   // AI Providers
   OPENAI_API_KEY:    z.string().optional(),

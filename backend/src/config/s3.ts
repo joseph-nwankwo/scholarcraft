@@ -3,6 +3,7 @@ import { env } from './env'
 
 export const s3Client = new S3Client({
   region: env.AWS_REGION,
+  ...(env.AWS_S3_ENDPOINT ? { endpoint: env.AWS_S3_ENDPOINT } : {}),
   ...(env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY
     ? {
         credentials: {
@@ -13,4 +14,5 @@ export const s3Client = new S3Client({
     : {}),
 })
 
-export const S3_BUCKET = env.AWS_S3_BUCKET ?? 'lecturercraft-dev'
+export const S3_BUCKET = env.AWS_S3_BUCKET ?? 'scholarsuite-dev'
+export const S3_PUBLIC_URL = env.AWS_S3_PUBLIC_URL
