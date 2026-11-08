@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, BookOpen, FileText, GraduationCap, Sparkles,
-  HelpCircle, ClipboardList, Award, CheckSquare, List, Presentation,
-  FlaskConical, FolderOpen, Download, BarChart2, Settings, Plus,
+  LayoutDashboard, BookOpen, FileText, GraduationCap,
+  ClipboardList, Calendar, Settings, CreditCard,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -31,28 +30,21 @@ export function CommandPalette() {
   }
 
   const commands: CmdItem[] = [
-    // Navigation
-    { id: 'nav-dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => go(ROUTES.DASHBOARD), shortcut: '⌘D', group: 'Navigate' },
-    { id: 'nav-courses', label: 'Courses', icon: BookOpen, action: () => go(ROUTES.COURSES), shortcut: '⌘C', group: 'Navigate' },
-    { id: 'nav-docs', label: 'Document Library', icon: FolderOpen, action: () => go(ROUTES.DOCUMENT_LIBRARY), group: 'Navigate' },
-    { id: 'nav-analytics', label: 'Analytics', icon: BarChart2, action: () => go(ROUTES.ANALYTICS), group: 'Navigate' },
-    { id: 'nav-settings', label: 'Settings', icon: Settings, action: () => go(ROUTES.SETTINGS), shortcut: '⌘,', group: 'Navigate' },
-    // Create
-    { id: 'create-course', label: 'Create New Course', icon: Plus, action: () => go(ROUTES.COURSE_CREATE), group: 'Create' },
-    { id: 'create-lecture', label: 'Generate Lecture Note', icon: FileText, action: () => go(ROUTES.LECTURE_NOTE_GENERATE), group: 'Create' },
-    { id: 'create-questions', label: 'Generate Questions', icon: HelpCircle, action: () => go(ROUTES.QUESTION_GENERATOR), group: 'Create' },
-    { id: 'create-assignment', label: 'Create Assignment', icon: ClipboardList, action: () => go(ROUTES.ASSIGNMENT_GENERATOR), group: 'Create' },
-    { id: 'create-exam', label: 'Build Exam', icon: Award, action: () => go(ROUTES.EXAM_BUILDER), group: 'Create' },
-    { id: 'create-rubric', label: 'Generate Rubric', icon: CheckSquare, action: () => go(ROUTES.RUBRIC_GENERATOR), group: 'Create' },
-    { id: 'create-outline', label: 'Create Course Outline', icon: List, action: () => go(ROUTES.COURSE_OUTLINE), group: 'Create' },
-    { id: 'create-ppt', label: 'Generate Presentation', icon: Presentation, action: () => go(ROUTES.POWERPOINT_GENERATOR), group: 'Create' },
-    // AI
-    { id: 'ai-studio', label: 'Open AI Studio', icon: Sparkles, action: () => go(ROUTES.AI_STUDIO), shortcut: '⌘A', group: 'AI Tools' },
-    { id: 'ai-teaching', label: 'Teaching Assistant', icon: GraduationCap, action: () => go(ROUTES.TEACHING_ASSISTANT), group: 'AI Tools' },
-    { id: 'ai-research', label: 'Research Assistant', icon: FlaskConical, action: () => go(ROUTES.RESEARCH_ASSISTANT), group: 'AI Tools' },
-    // Misc
-    { id: 'exports', label: 'Exports', icon: Download, action: () => go(ROUTES.EXPORTS), group: 'Content' },
-    { id: 'lecture-notes', label: 'Lecture Notes', icon: FileText, action: () => go(ROUTES.LECTURE_NOTES), group: 'Content' },
+    // Navigate
+    { id: 'nav-dashboard',       label: 'Dashboard',        icon: LayoutDashboard, action: () => go(ROUTES.DASHBOARD),        shortcut: '⌘D', group: 'Navigate' },
+    { id: 'nav-study-tools',     label: 'Study Tools',      icon: BookOpen,        action: () => go(ROUTES.STUDY_TOOLS),      shortcut: '⌘S', group: 'Navigate' },
+    { id: 'nav-study-planner',   label: 'Study Planner',    icon: Calendar,        action: () => go(ROUTES.STUDY_PLANNER),                    group: 'Navigate' },
+    { id: 'nav-class-connect',   label: 'Class Connect',    icon: GraduationCap,   action: () => go(ROUTES.CLASS_CONNECT),                    group: 'Navigate' },
+    { id: 'nav-submissions',     label: 'Submissions',      icon: ClipboardList,   action: () => go(ROUTES.SUBMISSIONS),                      group: 'Navigate' },
+    { id: 'nav-plagiarism',      label: 'Plagiarism Check', icon: FileText,        action: () => go(ROUTES.PLAGIARISM_CHECK),                 group: 'Navigate' },
+    // ThesisCraft
+    { id: 'thesis-home',         label: 'ThesisCraft',          icon: FileText,    action: () => go(ROUTES.THESISCRAFT),                      group: 'ThesisCraft' },
+    { id: 'thesis-proposal',     label: 'Thesis Proposal',      icon: FileText,    action: () => go(ROUTES.THESISCRAFT_PROPOSAL),             group: 'ThesisCraft' },
+    { id: 'thesis-chapters',     label: 'Thesis Chapters',      icon: BookOpen,    action: () => go(ROUTES.THESISCRAFT_CHAPTERS),             group: 'ThesisCraft' },
+    { id: 'thesis-citations',    label: 'Thesis Citations',     icon: BookOpen,    action: () => go(ROUTES.THESISCRAFT_CITATIONS),            group: 'ThesisCraft' },
+    // Account
+    { id: 'nav-settings',        label: 'Settings',         icon: Settings,        action: () => go(ROUTES.SETTINGS),         shortcut: '⌘,', group: 'Account' },
+    { id: 'nav-billing',         label: 'Billing',          icon: CreditCard,      action: () => go(ROUTES.BILLING),                          group: 'Account' },
   ]
 
   const groups = [...new Set(commands.map((c) => c.group))]
