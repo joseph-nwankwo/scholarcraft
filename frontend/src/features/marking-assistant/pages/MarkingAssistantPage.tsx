@@ -586,7 +586,7 @@ export default function MarkingAssistantPage() {
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-foreground uppercase tracking-wide">2 · Student Scripts</p>
               {studentFiles.length > 0 && (
-                <Badge variant="secondary" size="sm">
+                <Badge variant="default" size="sm">
                   {studentFiles.length} file{studentFiles.length !== 1 ? 's' : ''}
                 </Badge>
               )}
