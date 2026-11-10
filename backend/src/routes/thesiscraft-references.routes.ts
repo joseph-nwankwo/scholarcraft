@@ -1,9 +1,6 @@
-import path from 'path'
-import fs from 'fs'
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import multer from 'multer'
-import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
 import { authenticate } from '../middleware/auth.middleware'
 import { validate } from '../middleware/validate'
@@ -16,6 +13,7 @@ import { chunkText } from '../utils/chunkText'
 import { env } from '../config/env'
 import { getEmbeddings } from '../services/ai/embeddings.service'
 import { retrieveRelevantChunks } from '../services/thesiscraft/retrieval.service'
+import { s3Service } from '../services/storage/s3.service'
 
 const router = Router()
 router.use(authenticate)
@@ -43,22 +41,27 @@ router.post('/theses/:id/references', upload.array('files', 5), asyncHandler(asy
   const files = req.files as Express.Multer.File[] | undefined
   if (!files || files.length === 0) throw AppError.badRequest('No files uploaded')
 
-  const uploadsDir = path.join(process.cwd(), 'uploads', 'thesis-references')
-  fs.mkdirSync(uploadsDir, { recursive: true })
-
   const results = []
 
   for (const file of files) {
-    const ext      = path.extname(file.originalname) || ''
-    const filename = `${uuidv4()}${ext}`
-    const dest     = path.join(uploadsDir, filename)
+    // Upload to R2 first so we have the key before creating the DB record.
+    // fileUrl stores the R2 object key (not the public URL) so the delete
+    // handler can call s3Service.delete() without a separate key column.
+    let r2Key: string
+    try {
+      const { key } = await s3Service.upload(file, 'thesis-references')
+      r2Key = key
+    } catch (uploadErr: unknown) {
+      results.push({ error: `Upload failed for ${file.originalname}: ${(uploadErr as Error).message}` })
+      continue
+    }
 
     const document = await prisma.thesisReferenceDocument.create({
       data: {
         thesisId: thesis.id,
         userId:   req.user!.userId,
         fileName: file.originalname,
-        fileUrl:  `/uploads/thesis-references/${filename}`,
+        fileUrl:  r2Key,
         fileType: file.mimetype,
         status:   'PROCESSING',
       },
@@ -66,7 +69,6 @@ router.post('/theses/:id/references', upload.array('files', 5), asyncHandler(asy
     })
 
     try {
-      fs.writeFileSync(dest, file.buffer)
       const text = await extractDocumentText(file.buffer, file.mimetype, file.originalname)
       if (!text.trim()) throw new Error('No extractable text found in this file')
 
@@ -119,8 +121,10 @@ router.delete('/references/:id', asyncHandler(async (req: Request, res: Response
 
   await prisma.thesisReferenceDocument.delete({ where: { id: document.id } })
 
-  const filePath = path.join(process.cwd(), document.fileUrl)
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+  // Best-effort R2 deletion — don't block the response if it fails.
+  s3Service.delete(document.fileUrl).catch((err: unknown) => {
+    console.error('R2 delete failed for key', document.fileUrl, (err as Error).message)
+  })
 
   res.json({ status: 'success', message: 'Reference document deleted' })
 }))
