@@ -60,7 +60,7 @@ ScholarCraft/
 ### Backend (`backend/.env`)
 ```
 PORT=4001
-DATABASE_URL=postgresql://postgres:chinedu.56@localhost:5432/craftsuite
+DATABASE_URL=postgresql://postgres:<your-password>@localhost:5432/craftsuite
 JWT_ACCESS_SECRET=craft-suite-shared-access-secret-uamsatech-platform-2026-change-in-prod
 JWT_REFRESH_SECRET=craft-suite-shared-refresh-secret-uamsatech-platform-2026-change-in-prod
 FRONTEND_URL=http://localhost:3002
